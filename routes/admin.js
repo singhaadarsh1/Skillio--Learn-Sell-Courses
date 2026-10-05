@@ -17,13 +17,13 @@ adminRouter.post("/course",function(req,res){
         message: "add courses"
     });
 });
-adminRouter.put("/course",function(req,res){
+adminRouter.put("/",function(req,res){
     res.json({
         message: "add courses"
     });
 });
 
-adminRouter.get("/course/bulk",function(req,res){
+adminRouter.get("/bulk",function(req,res){
     res,json({
         message:"get all courses"
     })
