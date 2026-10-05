@@ -12,7 +12,7 @@ adminRouter.post("/signin", function(req,res){
         message:"signed up"
     });
 });
-adminRouter.post("/course",function(req,res){
+adminRouter.post("/",function(req,res){
     res.json({
         message: "add courses"
     });
