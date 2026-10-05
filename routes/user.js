@@ -1,16 +1,17 @@
-const{router}=require("express");
+const{Router}=require("express");
 const userRouter=Router();
-app.post("/signup", function (req, res) {
+const {userModel,purchaseModel,courseModel}=require("../db");
+userRouter.post("/signup", function (req, res) {
   res.json({
     message: "signup endpoint",
   });
 });
-app.post("/signin", function (req, res) {
+userRouter.post("/signin", function (req, res) {
   res.json({
     message: "signin endpoint",
   });
 });
-app.get("/purchases", function (req, res) {
+userRouter.get("/purchases", function (req, res) {
   res.json({
     message: "purchase endpoint",
   });
