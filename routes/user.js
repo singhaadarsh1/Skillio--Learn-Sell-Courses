@@ -10,8 +10,8 @@ userRouter.post("/signup", async function (req, res) {
   const requireBody = z.object({
     email: z.string().min(3).max(100).email(),
     password: z.string().min(3).max(12),
-    firstname: z.string().min(3).max(20),
-    lastname: z.string().min(3).max(20),
+    firstName: z.string().min(3).max(20),
+    lastName: z.string().min(3).max(20),
   });
   const parseDataSuccess = requireBody.safeParse(req.body);
   if (!parseDataSuccess.success) {
@@ -20,14 +20,14 @@ userRouter.post("/signup", async function (req, res) {
       error: parseDataSuccess.error,
     });
   }
-  const { email, password, firstname, lastname } = req.body;
+  const { email, password, firstName, lastName } = req.body;
   const hashedPassword = await bcrypt.hash(password, 5);
   try {
     await userModel.create({
       email,
       password: hashedPassword,
-      firstname,
-      lastname,
+      firstName,
+      lastName,
     });
   } catch (e) {
     console.error(e);
