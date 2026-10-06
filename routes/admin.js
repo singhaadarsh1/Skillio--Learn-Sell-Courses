@@ -12,18 +12,18 @@ adminRouter.post("/signin", function(req,res){
         message:"signed up"
     });
 });
-adminRouter.post("/",function(req,res){
+adminRouter.post("/course",function(req,res){
     res.json({
         message: "add courses"
     });
 });
-adminRouter.put("/",function(req,res){
+adminRouter.put("course",function(req,res){
     res.json({
         message: "add courses"
     });
 });
 
-adminRouter.get("/bulk",function(req,res){
+adminRouter.get("/course/bulk",function(req,res){
     res,json({
         message:"get all courses"
     })
