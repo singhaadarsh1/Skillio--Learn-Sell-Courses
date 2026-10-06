@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const z = require("zod");
 const bcrypt = require("bcrypt");
 const { userMiddleware } = require("../Middleware/user");
-const { userModel } = require("../db");
+const { userModel,purchaseModel,courseModel } = require("../db");
 const { JWT_USER_PASSWORD } = require("../config");
 userRouter.post("/signup", async function (req, res) {
   const requireBody = z.object({
@@ -41,8 +41,8 @@ userRouter.post("/signup", async function (req, res) {
 });
 userRouter.post("/signin", async function (req, res) {
   const requireBody = z.object({
-    email: z.string.email(),
-    password: z.string().min(6),
+    email: z.string().email(),
+    password: z.string().min(3),
   });
   const parseDatawithSuccess = requireBody.safeParse(req.body);
   if (!parseDatawithSuccess.success) {
@@ -52,7 +52,7 @@ userRouter.post("/signin", async function (req, res) {
     });
   }
   const { email, password } = req.body;
-  const user = await userModel.findone({
+  const user = await userModel.findOne({
     email: email,
   });
   if (!user) {
@@ -67,7 +67,7 @@ userRouter.post("/signin", async function (req, res) {
       {
         id: user._id,
       },
-      process.env.JWT_USER_PASSWORD,
+      JWT_USER_PASSWORD,
     );
 
     // Send the generated token back to client
@@ -88,7 +88,7 @@ userRouter.get("/purchases", userMiddleware, async function (req, res) {
     userId: userId,
   });
 
-  if (!purchases) {
+  if (purchases.length===0) {
     return res.status(404).json({
       // Error message for no purchases found
       message: "No purchases found",
