@@ -211,6 +211,44 @@ adminRouter.put("/course", adminMiddleware, async function (req, res) {
     message: "Course updated!", // Successfully course updated or not
   });
 });
+adminRouter.delete("/course", adminMiddleware, async function (req, res) {
+  // Get the adminId from the middleware
+  const adminId = req.adminId;
+
+  // Get courseId from request body
+  const { courseId } = req.body;
+
+  // Check whether courseId was provided
+  if (!courseId) {
+    return res.status(400).json({
+      message: "Please provide a courseId",
+    });
+  }
+
+  // Find the course and make sure it belongs to this admin
+  const course = await courseModel.findOne({
+    _id: courseId,
+    creatorId: adminId,
+  });
+
+  // If course doesn't exist or doesn't belong to this admin
+  if (!course) {
+    return res.status(404).json({
+      message: "Course not found",
+    });
+  }
+
+  // Delete the course
+  await courseModel.deleteOne({
+    _id: courseId,
+    creatorId: adminId,
+  });
+
+  // Send success response
+  res.status(200).json({
+    message: "Course deleted successfully",
+  });
+});
 
 adminRouter.get("/course/bulk", adminMiddleware, async function (req, res) {
   // Get the adminId from the request object
