@@ -1,7 +1,8 @@
 require('dotenv').config()
-console.log(process.env.MONGO_URL)
+//console.log(process.env.MONGO_URL)
 const express = require("express");
 const mongoose = require("mongoose");
+const { MONGO_URL } = require("./config");
 
 const{userRouter}=require("./routes/user");
 const {courseRouter}=require("./routes/course");
@@ -14,11 +15,17 @@ app.use("/api/v1/admin",adminRouter);
 app.use("/api/v1/course",courseRouter);
 
 async function main(){
-    await mongoose.connect(process.env.MONGO_URL)
-app.listen(3000);
+    try{
+    await mongoose.connect(MONGO_URL);
+    console.log("connected to the database ");
+app.listen(3000,()=>{
 console.log("listening on port 3000")
+});
+    }catch(e){
+        console.error("Failed to connect to the database ",e);
+    }
 }
-main()
+main();
 
 
 
