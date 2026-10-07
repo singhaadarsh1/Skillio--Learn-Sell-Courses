@@ -6,8 +6,8 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const z = require("zod");
 const { JWT_ADMIN_PASSWORD } = require("../config");
-
-adminRouter.post("/signup", async function (req, res) {
+//already created admin in mongodb , so that not anyone who knows endpoint can become admin
+/*adminRouter.post("/signup", async function (req, res) {
   // Input validation using zod
   const requiredBody = z.object({
     email: z.string().email().min(5), // Email must be a valid format and at least 5 characters
@@ -54,7 +54,7 @@ adminRouter.post("/signup", async function (req, res) {
   res.json({
     message: "Sign-up Successfull",
   });
-});
+});*/
 adminRouter.post("/signin", async function (req, res) {
   // Validate the request body data using zod schema(email,password must be valid)
   const requireBody = z.object({
