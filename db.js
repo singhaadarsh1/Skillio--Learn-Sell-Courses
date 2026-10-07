@@ -42,15 +42,22 @@ const courseSchema = new Schema(
   },
 );
 
-const purchaseSchema = new Schema(
-  {
-    userId: ObjectId,
-    courseId: ObjectId,
-  },
+const purchaseSchema = new Schema({
+    userId: {
+        type: ObjectId,
+        required: true
+    },
+    courseId: {
+        type: ObjectId,
+        required: true
+    }
+}, {
+    timestamps: true
+});
 
-  {
-    timestamps: true,
-  },
+purchaseSchema.index(
+    { userId: 1, courseId: 1 },
+    { unique: true }
 );
 
 const userModel = mongoose.model("user", userSchema);
