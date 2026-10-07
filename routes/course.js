@@ -21,6 +21,14 @@ courseRouter.post("/purchase",userMiddleware, async function (req, res) {
         courseId: courseId,
         userId: userId,     
     });
+    // Check whether the course actually exists
+    const course = await courseModel.findById(courseId);
+
+    if (!course) {
+        return res.status(404).json({
+            message: "Course not found",
+        });
+    }
 
     // If the user has already purchased the course, return a error response to the client
     if(existingPurchase){
@@ -30,13 +38,13 @@ courseRouter.post("/purchase",userMiddleware, async function (req, res) {
     }
 
     // Try to create a new purchase entry in the database with the provided courseId and userId
-    await purchaseModel.create({
+    const purchase=await purchaseModel.create({
         courseId: courseId, // The ID of the course being purchased
         userId: userId, // The ID of the user making the purchase
     });
 
     // If the purchase is successful, return a status with a success message to the client
-    res.status(201).json({
+    return res.status(201).json({
         message: "You have successfully bought the course"
     });
 });
