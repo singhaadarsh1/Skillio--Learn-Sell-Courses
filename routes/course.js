@@ -48,13 +48,59 @@ courseRouter.post("/purchase",userMiddleware, async function (req, res) {
         message: "You have successfully bought the course"
     });
 });
-courseRouter.get("/preview", async function (req, res) {
+//simple return all the courses , when project grow api will return all the couses at once 
+/*courseRouter.get("/preview", async function (req, res) {
   // Query the database to get all the courses available for purchase
     const courses = await courseModel.find({});
 
-    // Return the queried course details as a JSON response to the client with a status code
+    Return the queried course details as a JSON response to the client with a status code
     res.status(200).json({
         courses: courses, // Send the course details back to the client
+    });
+});*/
+//req.query , mongodb filtration and pagination concept , so that we dont get all courses every time at once 
+courseRouter.get("/preview", async function (req, res) {
+
+    // Get page number from query parameter
+    const page = Math.max(Number(req.query.page) || 1, 1);
+
+    // Get number of courses per page
+    // Maximum 20 courses per request
+    const limit = Math.min(Number(req.query.limit) || 10, 20);
+
+    // Get search text
+    const search = req.query.search || "";
+
+    // Calculate how many courses to skip
+    const skip = (page - 1) * limit;
+
+    // Create filter
+    const filter = search
+        ? {
+            title: {
+                $regex: search,
+                $options: "i"
+            }
+        }
+        : {};
+
+    // Get total number of matching courses
+    const totalCourses = await courseModel.countDocuments(filter);
+
+    // Get courses for current page
+    const courses = await courseModel
+        .find(filter)
+        .skip(skip)
+        .limit(limit);
+
+    res.status(200).json({
+        courses: courses,
+        pagination: {
+            currentPage: page,
+            limit: limit,
+            totalCourses: totalCourses,
+            totalPages: Math.ceil(totalCourses / limit)
+        }
     });
 });
 module.exports={
