@@ -98,6 +98,7 @@ adminRouter.post("/signin", async function (req, res) {
         id: admin._id,
       },
       JWT_ADMIN_PASSWORD,
+      {expiresIn:"2h"}
     );
 
     // Send the token to the client

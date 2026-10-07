@@ -68,6 +68,7 @@ userRouter.post("/signin", async function (req, res) {
         id: user._id,
       },
       JWT_USER_PASSWORD,
+      {expiresIn:"2h"}
     );
 
     // Send the generated token back to client
