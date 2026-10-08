@@ -118,11 +118,12 @@ adminRouter.post("/course", adminMiddleware, async function (req, res) {
 
   // Validate the request body data using zod schema
   const requireBody = z.object({
-    title: z.string().min(3),
-    description: z.string().min(10),
-    imageUrl: z.string().url(),
-    price: z.number().positive(),
-  });
+  title: z.string().min(3),
+  description: z.string().min(10),
+  category: z.string().min(2),
+  imageUrl: z.string().min(1),
+  price: z.number().positive(),
+});
   // Parse and validate the request body data
   const parseDataWithSuccess = requireBody.safeParse(req.body);
 
@@ -135,16 +136,17 @@ adminRouter.post("/course", adminMiddleware, async function (req, res) {
   }
 
   // Get title, description, imageURL, price from the request body
-  const { title, description, imageUrl, price } = req.body;
+  const { title, description, category , imageUrl, price } = req.body;
 
   // Create a new course with the given title, description, imageURL, price, creatorId
   const course = await courseModel.create({
-    title: title,
-    description: description,
-    imageUrl: imageUrl,
-    price: price,
-    creatorId: adminId,
-  });
+  title,
+  description,
+  category,
+  imageUrl,
+  price,
+  creatorId: adminId,
+});
 
   // Respond with a success message if the course is created successfully
   res.status(201).json({
@@ -160,8 +162,9 @@ adminRouter.put("/course", adminMiddleware, async function (req, res) {
   const requireBody = z.object({
     courseId: z.string().min(5), // Ensure course ID is at least 5 characters
     title: z.string().min(3).optional(), // Title is optional
-    description: z.string().min(5).optional(), // Description is optional
-    imageUrl: z.string().url().min(5).optional(), // Image URL is optional
+    description:z.string().min(5).optional(),
+    category: z.string().min(2).optional(), // Description is optional
+    imageUrl: z.string().min(1).optional(), // Image URL is optional
     price: z.number().positive().optional(), // Price is optional
   });
 
@@ -171,13 +174,13 @@ adminRouter.put("/course", adminMiddleware, async function (req, res) {
   // If validation fails, respond with an error message and the details of the error
   if (!parseDataWithSuccess.success) {
     return res.json({
-      message: "Incorrect data format",
+      message: "Incorrect Credentials",
       error: parseDataWithSuccess.error,
     });
   }
 
   // Destructure the validated fields from the request body
-  const { title, description, imageUrl, price, courseId } = req.body;
+  const { title, description, category, imageUrl, price, courseId } = req.body;
 
   // Attempt to find the course in the database using the provided courseId and adminId
   const course = await courseModel.findOne({
@@ -202,6 +205,8 @@ adminRouter.put("/course", adminMiddleware, async function (req, res) {
       // It uses the provided courseId and adminId to identify the course. For each field (title, description, imageUrl, price), if a new value is provided, it is used to update the course. If a field is not provided, the existing value from the database is kept.
       title: title || course.title,
       description: description || course.description,
+      category: category || course.category,
+
       imageUrl: imageUrl || course.imageUrl,
       price: price || course.price,
     },
@@ -262,7 +267,7 @@ adminRouter.get("/course/bulk", adminMiddleware, async function (req, res) {
 
   // Respond with the courses if they are found successfully
   res.json({
-    message: "Course Updated",
+    message: "Courses fetched successfully",
     courses: courses,
   });
 });

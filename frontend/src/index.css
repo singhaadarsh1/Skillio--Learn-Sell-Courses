@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-skillio-bg: #F7F5F0;
+  --color-skillio-text: #171717;
+  --color-skillio-muted: #6B6B6B;
+  --color-skillio-accent: #E85D4A;
+  --color-skillio-card: #FFFFFF;
+  --color-skillio-border: #E7E3DC;
+}
+
+:root {
+  font-family: "Manrope", sans-serif;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-skillio-bg);
+  color: var(--color-skillio-text);
+}

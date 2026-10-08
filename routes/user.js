@@ -4,8 +4,14 @@ const jwt = require("jsonwebtoken");
 const z = require("zod");
 const bcrypt = require("bcrypt");
 const { userMiddleware } = require("../Middleware/user");
-const { userModel,purchaseModel,courseModel } = require("../db");
+const {
+  userModel,
+  purchaseModel,
+  courseModel,
+  progressModel,
+} = require("../db");
 const { JWT_USER_PASSWORD } = require("../config");
+const { getCourseContent } = require("../data/courseLessons");
 userRouter.post("/signup", async function (req, res) {
   const requireBody = z.object({
     email: z.string().min(3).max(100).email(),
@@ -68,7 +74,7 @@ userRouter.post("/signin", async function (req, res) {
         id: user._id,
       },
       JWT_USER_PASSWORD,
-      {expiresIn:"2h"}
+      { expiresIn: "2h" },
     );
 
     // Send the generated token back to client
@@ -89,7 +95,7 @@ userRouter.get("/purchases", userMiddleware, async function (req, res) {
     userId: userId,
   });
 
-  if (purchases.length===0) {
+  if (purchases.length === 0) {
     return res.status(404).json({
       // Error message for no purchases found
       message: "No purchases found",
@@ -103,13 +109,180 @@ userRouter.get("/purchases", userMiddleware, async function (req, res) {
   const courseData = await courseModel.find({
     _id: { $in: purchasesCourseIds },
   });
+  const progressData = await progressModel.find({
+  userId,
+  courseId: { $in: purchasesCourseIds },
+}).select("courseId completedLessons");
 
   // Send the purchases and corresponding course details back to the client
   res.status(200).json({
     purchases,
     courseData,
+    progressData,
   });
 });
+userRouter.get("/me", userMiddleware, async function (req, res) {
+  const userId = req.userId;
+
+  const user = await userModel
+    .findById(userId)
+    .select("firstName lastName email");
+
+  if (!user) {
+    return res.status(404).json({
+      message: "User not found",
+    });
+  }
+
+  res.status(200).json({
+    user: user,
+  });
+});
+userRouter.put("/password", userMiddleware, async function (req, res) {
+  const userId = req.userId;
+
+  const requireBody = z.object({
+    currentPassword: z.string().min(3),
+    newPassword: z.string().min(3).max(12),
+  });
+
+  const parseDataWithSuccess = requireBody.safeParse(req.body);
+
+  if (!parseDataWithSuccess.success) {
+    return res.status(400).json({
+      message: "Invalid password format",
+    });
+  }
+
+  const { currentPassword, newPassword } = req.body;
+
+  const user = await userModel.findById(userId);
+
+  if (!user) {
+    return res.status(404).json({
+      message: "User not found",
+    });
+  }
+
+  const passwordMatch = await bcrypt.compare(currentPassword, user.password);
+
+  if (!passwordMatch) {
+    return res.status(403).json({
+      message: "Current password is incorrect",
+    });
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 5);
+
+  user.password = hashedPassword;
+
+  await user.save();
+
+  res.status(200).json({
+    message: "Password changed successfully",
+  });
+});
+userRouter.get("/course/:courseId", userMiddleware, async function (req, res) {
+  const userId = req.userId;
+  const courseId = req.params.courseId;
+
+  const course = await courseModel.findById(courseId);
+
+  if (!course) {
+    return res.status(404).json({
+      message: "Course not found",
+    });
+  }
+
+  const purchase = await purchaseModel.findOne({
+    userId,
+    courseId,
+  });
+
+  if (!purchase) {
+    return res.status(403).json({
+      message: "You have not purchased this course",
+    });
+  }
+
+  const progress = await progressModel.findOne({
+    userId,
+    courseId,
+  });
+
+  const content = getCourseContent(course.title);
+
+  res.status(200).json({
+    course,
+    lessons: content.lessons,
+    videoId: content.videoId,
+    progress: progress ? progress.completedLessons : [],
+  });
+});
+userRouter.put(
+  "/course/:courseId/progress",
+  userMiddleware,
+  async function (req, res) {
+    const userId = req.userId;
+    const courseId = req.params.courseId;
+
+    const lessonIndex = Number(req.body.lessonIndex);
+
+    if (!Number.isInteger(lessonIndex) || lessonIndex < 0) {
+      return res.status(400).json({
+        message: "Invalid lesson index",
+      });
+    }
+
+    const course = await courseModel.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({
+        message: "Course not found",
+      });
+    }
+
+    const purchase = await purchaseModel.findOne({
+      userId,
+      courseId,
+    });
+
+    if (!purchase) {
+      return res.status(403).json({
+        message: "You have not purchased this course",
+      });
+    }
+
+    const content = getCourseContent(course.title);
+
+    if (lessonIndex >= content.lessons.length) {
+      return res.status(400).json({
+        message: "Invalid lesson index",
+      });
+    }
+
+    const progress = await progressModel.findOneAndUpdate(
+      {
+        userId,
+        courseId,
+      },
+      {
+        $addToSet: {
+          completedLessons: lessonIndex,
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+      }
+    );
+
+    res.status(200).json({
+      message: "Lesson marked as completed",
+      completedLessons: progress.completedLessons,
+    });
+  }
+);
 
 module.exports = {
   userRouter: userRouter,

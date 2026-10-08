@@ -1,0 +1,68 @@
+const courses = [
+  {
+    title: "Complete MERN Stack Development",
+    category: "Web Development",
+    instructor: "Skillio",
+    price: 799,
+    iconType: "mern",
+    image:"/courses/mern.jpg",
+  },
+  {
+    title: "JavaScript That Actually Makes Sense",
+    category: "JavaScript",
+    instructor: "Skillio",
+    price: 599,
+    iconType: "javascript",
+    image:"/courses/javascript.jpg",
+  },
+  {
+    title: "Generative AI & LLM Fundamentals",
+    category: "Artificial Intelligence",
+    instructor: "Skillio",
+    price: 899,
+    iconType: "ai",
+    image:"/courses/ai.jpg",
+  },
+  {
+    title: "Docker & Kubernetes From Scratch",
+    category: "DevOps",
+    instructor: "Skillio",
+    price: 749,
+    iconType: "devops",
+    image: "/courses/devops.jpg",
+  },
+  {
+    title: "AWS Cloud Essentials",
+    category: "Cloud",
+    instructor: "Skillio",
+    price: 699,
+    iconType: "cloud",
+    image:"/courses/cloud.jpg",
+  },
+  {
+    title: "Python for Data & Machine Learning",
+    category: "Data Science",
+    instructor: "Skillio",
+    price: 799,
+    iconType: "python",
+    image:"/courses/python.jpg",
+  },
+  {
+    title: "Data Structures & Algorithms",
+    category: "Computer Science",
+    instructor: "Skillio",
+    price: 649,
+    iconType: "dsa",
+    image:"/courses/dsa.jpg",
+  },
+  {
+    title: "React & Modern Frontend Development",
+    category: "Frontend",
+    instructor: "Skillio",
+    price: 699,
+    iconType: "react",
+    image:"/courses/react.jpg",
+  },
+];
+
+export default courses;
