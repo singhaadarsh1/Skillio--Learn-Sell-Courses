@@ -9,24 +9,29 @@ function CourseSection({ selectedCategory }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  /*
-    Fetch courses from backend when the component loads.
-  */
+  // Fetch courses from the backend
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         const response = await axios.get(
-  `${import.meta.env.VITE_API_URL}/api/v1/course/preview?limit=20`
-);
+          "http://localhost:3000/api/v1/course/preview?limit=20"
+        );
 
-        setCourses(response.data.courses);
+        // Ensure that courses is always an array
+        const fetchedCourses = response.data?.courses;
+
+        setCourses(
+          Array.isArray(fetchedCourses)
+            ? fetchedCourses
+            : []
+        );
       } catch (error) {
         console.error(
           "Failed to fetch homepage courses:",
           error
         );
 
-        setError("Could not load courses.");
+        setError("Could not load courses. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -35,27 +40,22 @@ function CourseSection({ selectedCategory }) {
     fetchCourses();
   }, []);
 
-  /*
-    Show only the first 6 courses on the homepage.
-    Then apply the selected category filter.
-  */
+  // Show all courses and filter by category when selected
   const filteredCourses = useMemo(() => {
-    const featuredCourses = courses.slice(0, 6);
+    const availableCourses = Array.isArray(courses)
+      ? courses
+      : [];
 
     if (selectedCategory === "All Courses") {
-  return courses.slice(0, 6);
-}
+      return availableCourses;
+    }
 
-return courses
-  .filter(
-    (course) => course.category === selectedCategory
-  )
-  .slice(0, 6);
+    return availableCourses.filter(
+      (course) => course.category === selectedCategory
+    );
   }, [courses, selectedCategory]);
 
-  /*
-    Loading state
-  */
+  // Loading state
   if (loading) {
     return (
       <section className="mx-auto max-w-7xl px-6 pb-24">
@@ -68,9 +68,7 @@ return courses
     );
   }
 
-  /*
-    Error state
-  */
+  // Error state
   if (error) {
     return (
       <section className="mx-auto max-w-7xl px-6 pb-24">
@@ -89,9 +87,7 @@ return courses
 
         {/* Section heading */}
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-
           <div className="max-w-2xl">
-
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-skillio-accent">
               Browse the good stuff
             </p>
@@ -104,7 +100,6 @@ return courses
               Pick a skill, get your hands dirty, and build something
               you can actually show people.
             </p>
-
           </div>
 
           <Link
@@ -113,24 +108,29 @@ return courses
           >
             View all courses →
           </Link>
-
         </div>
 
         {/* Course grid */}
         {filteredCourses.length > 0 ? (
-          <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <>
+            <p className="mt-8 text-sm text-skillio-muted">
+              Showing {filteredCourses.length}{" "}
+              {filteredCourses.length === 1
+                ? "course"
+                : "courses"}
+            </p>
 
-            {filteredCourses.map((course) => (
-              <CourseCard
-                key={course._id}
-                course={course}
-              />
-            ))}
-
-          </div>
+            <div className="mt-5 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredCourses.map((course) => (
+                <CourseCard
+                  key={course._id}
+                  course={course}
+                />
+              ))}
+            </div>
+          </>
         ) : (
           <div className="mt-10 rounded-2xl border border-skillio-border bg-skillio-card p-10 text-center">
-
             <h3 className="text-xl font-bold text-skillio-text">
               No courses in this category yet.
             </h3>
@@ -145,10 +145,8 @@ return courses
             >
               Browse all courses →
             </Link>
-
           </div>
         )}
-
       </div>
     </section>
   );
