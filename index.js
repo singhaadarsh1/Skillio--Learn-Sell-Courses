@@ -25,9 +25,12 @@ async function main(){
 app.listen(PORT,()=>{
 console.log(`LISTENING ON PORT ${PORT}`);
 });
-    }catch(e){
-        console.error("Failed to connect to the database ",e);
-    }
+    }catch (e) {
+    console.error("MongoDB connection failed");
+    console.error("Error name:", e.name);
+    console.error("Error message:", e.message);
+  }
+
 }
 main();
 
