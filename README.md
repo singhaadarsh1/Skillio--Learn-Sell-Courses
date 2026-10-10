@@ -159,8 +159,8 @@ Add screenshots of the actual running application here.
 
 <!-- Replace with your actual screenshot -->
 
-![Skillio Course Details](<Screenshot 2026-10-10 000115.png>)
-![Skillio Course Details](<Screenshot 2026-10-10 000136.png>)
+![Skillio Course Details](<docs/Screenshot 2026-10-10 000115.png>)
+![Skillio Course Details](<docs/Screenshot 2026-10-10 000136.png>)
 
 
 
