@@ -1,15 +1,3 @@
-**# Skillio — Online Learning Platform**
-<p align="left">
-  <img src="https://img.shields.io/badge/React-2026-61DAFB?logo=react&logoColor=black" alt="React" />
-  <img src="https://img.shields.io/badge/Node.js-Backend-339933?logo=node.js&logoColor=white" alt="Node.js" />
-  <img src="https://img.shields.io/badge/Express.js-REST_API-000000?logo=express&logoColor=white" alt="Express.js" />
-  <img src="https://img.shields.io/badge/MongoDB-Database-47A248?logo=mongodb&logoColor=white" alt="MongoDB" />
-  <img src="https://img.shields.io/badge/JWT-Authentication-purple?logo=jsonwebtokens&logoColor=white" alt="JWT" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-Styling-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
-  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License" />
-</p>
-
-
 
 <h1 align="left">🎓 Skillio — Online Learning Platform</h1>
 
@@ -27,7 +15,7 @@
 
 ---
 
-Skillio is a web-based learning platform that allows users to discover courses, enroll in courses, and track learning progress. Administrators can manage course listings through a dedicated dashboard.
+Skillio is a full-stack online learning platform built with the MERN stack, designed to make digital learning more accessible, organized, and engaging. It enables learners to explore a diverse range of courses, discover relevant learning content, enroll in courses, and track their learning progress through a personalized dashboard. The platform also features a dedicated administrative interface for managing course listings, updating course information, and maintaining course content. With JWT-based authentication, role-specific access control, and MongoDB-backed data management, Skillio demonstrates the integration of modern frontend and backend technologies to deliver a structured, scalable, and user-focused learning experience.
 
 ---
 
