@@ -1,33 +1,56 @@
-# Skillio — Online Learning Platform
+**# Skillio — Online Learning Platform**
+<p align="left">
+  <img src="https://img.shields.io/badge/React-2026-61DAFB?logo=react&logoColor=black" alt="React" />
+  <img src="https://img.shields.io/badge/Node.js-Backend-339933?logo=node.js&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/Express.js-REST_API-000000?logo=express&logoColor=white" alt="Express.js" />
+  <img src="https://img.shields.io/badge/MongoDB-Database-47A248?logo=mongodb&logoColor=white" alt="MongoDB" />
+  <img src="https://img.shields.io/badge/JWT-Authentication-purple?logo=jsonwebtokens&logoColor=white" alt="JWT" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-Styling-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License" />
+</p>
 
-**A Full Stack MERN Application for Online Course Discovery, Enrollment, and Learning Progress Tracking**
 
-Skillio is a web-based learning platform that allows users to explore courses, create accounts, enroll in courses, and track their learning progress. It also provides an administrator interface for managing course listings.
 
-The application is built using React, Node.js, Express.js, and MongoDB, with JWT-based authentication and role-specific authorization for users and administrators.
+<h1 align="left">🎓 Skillio — Online Learning Platform</h1>
 
-The project focuses on implementing practical full-stack development concepts, including REST API integration, database modeling, authentication middleware, protected routes, CRUD operations, and frontend-backend communication.
+<h3>Full-Stack MERN Application for Course Management and Learning Progress Tracking</h3>
+
+<p align="left">
+  <img src="https://img.shields.io/badge/React-Frontend-61DAFB?logo=react&logoColor=black" alt="React" />
+  <img src="https://img.shields.io/badge/Node.js-Backend-339933?logo=node.js&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/Express.js-REST_API-000000?logo=express&logoColor=white" alt="Express.js" />
+  <img src="https://img.shields.io/badge/MongoDB-Database-47A248?logo=mongodb&logoColor=white" alt="MongoDB" />
+  <img src="https://img.shields.io/badge/JWT-Authentication-purple?logo=jsonwebtokens&logoColor=white" alt="JWT" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-Styling-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License" />
+</p>
+
+---
+
+Skillio is a web-based learning platform that allows users to discover courses, enroll in courses, and track learning progress. Administrators can manage course listings through a dedicated dashboard.
+
+---
 
 ---
 
 ## Table of Contents
 
-* [Project Overview](#project-overview)
-* [Features](#features)
-* [Screenshots](#screenshots)
-* [Technology Stack](#technology-stack)
-* [Application Architecture](#application-architecture)
-* [Project Structure](#project-structure)
-* [Database Models](#database-models)
-* [API Endpoints](#api-endpoints)
-* [Getting Started](#getting-started)
-* [Environment Variables](#environment-variables)
-* [Running the Application](#running-the-application)
-* [Authentication and Authorization](#authentication-and-authorization)
-* [Learning Progress Tracking](#learning-progress-tracking)
-* [Future Improvements](#future-improvements)
-* [Learning Outcomes](#learning-outcomes)
-* [Author](#author)
+- [Project Overview](#project-overview)
+- [Features](#features)
+- [Screenshots](#screenshots)
+- [Technology Stack](#technology-stack)
+- [Application Architecture](#application-architecture)
+- [Project Structure](#project-structure)
+- [Database Models](#database-models)
+- [API Endpoints](#api-endpoints)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [Authentication and Authorization](#authentication-and-authorization)
+- [Learning Progress Tracking](#learning-progress-tracking)
+- [Future Improvements](#future-improvements)
+- [Learning Outcomes](#learning-outcomes)
+- [Author](#author)
+- [License](#license)
 
 ---
 
@@ -541,8 +564,8 @@ Install the following:
 ### 1. Clone the Repository
 
 ```bash
-git clone <https://github.com/singhaadarsh1/Skillio--Learn-Sell-Courses.gitRL>
-cd skillio-course-platform
+git clone https://github.com/singhaadarsh1/Skillio--Learn-Sell-Courses.git
+cd Skillio--Learn-Sell-Courses
 ```
 
 Replace the repository URL with your actual GitHub repository URL.
@@ -732,10 +755,10 @@ This project provides practical experience with:
 
 B.Tech Computer Science and Engineering Student
 
-Interested in full-stack development,Devops, backend engineering, and building practical web applications.
+Interested in Full Stack Development, Backend Engineering, DevOps, and building practical web applications.
 
-* GitHub: [(https://github.com/singhaadarsh1)]
-* LinkedIn: [(https://www.linkedin.com/in/aadarsh-singh-ba061628a/?isSelfProfile=true)]
+- GitHub: [singhaadarsh1](https://github.com/singhaadarsh1)
+- LinkedIn: [LinkedIn Profile](https://www.linkedin.com/in/aadarsh-singh-ba061628a/)
 
 ---
 
