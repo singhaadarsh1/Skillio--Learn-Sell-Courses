@@ -168,8 +168,8 @@ Add screenshots of the actual running application here.
 
 <!-- Replace with your actual screenshot -->
 
-![Skillio Learning Dashboard](<docs/Screenshot 2026-10-09 235550.png>)
-![Skillio Learning Dashboard](<docs/Screenshot 2026-10-09 235613.png>)
+![Skillio Learning Dashboard](<docs/Screenshot 2026-10-10 000115.png>)
+![Skillio Learning Dashboard](<docs/Screenshot 2026-10-10 000136.png>)
 
 
 ### Administrator Dashboard
