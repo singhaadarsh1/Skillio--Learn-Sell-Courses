@@ -30,13 +30,29 @@ async function connectDB() {
     return;
   }
 
-  if (!dbConnectionPromise) {
-    dbConnectionPromise = mongoose.connect(MONGO_URL).catch((error) => {q
-      dbConnectionPromise = null;
-      throw error;
-    });
-  }
+ if (!dbConnectionPromise) {
+    console.log("Attempting MongoDB connection...");
 
+    dbConnectionPromise = mongoose
+        .connect(MONGO_URL, {
+            serverSelectionTimeoutMS: 15000,
+        })
+        .then((connection) => {
+            console.log("Connected to MongoDB Atlas");
+            return connection;
+        })
+        .catch((error) => {
+            dbConnectionPromise = null;
+
+            console.error("MongoDB connection failed:", {
+                name: error.name,
+                message: error.message,
+                code: error.code,
+            });
+
+            throw error;
+        });
+}
   await dbConnectionPromise;
   console.log("Connected to MongoDB Atlas");
 }
