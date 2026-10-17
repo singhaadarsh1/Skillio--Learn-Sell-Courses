@@ -1,24 +1,7 @@
-require("dotenv").config();
-
-const express = require("express");
-const cors = require("cors");
-const mongoose = require("mongoose");
-
-const { MONGO_URL } = require("./config");
-
-const { userRouter } = require("./routes/user");
-const { courseRouter } = require("./routes/course");
-const { adminRouter } = require("./routes/admin");
-
-const app = express();
-
 app.use(cors());
 app.use(express.json());
 
-app.use("/api/v1/user", userRouter);
-app.use("/api/v1/admin", adminRouter);
-app.use("/api/v1/course", courseRouter);
-
+// Database connection function
 let dbConnectionPromise;
 
 async function connectDB() {
@@ -30,40 +13,36 @@ async function connectDB() {
     return;
   }
 
- if (!dbConnectionPromise) {
+  if (!dbConnectionPromise) {
     console.log("Attempting MongoDB connection...");
 
     dbConnectionPromise = mongoose
-        .connect(MONGO_URL, {
-            serverSelectionTimeoutMS: 15000,
-        })
-        .then((connection) => {
-            console.log("Connected to MongoDB Atlas");
-            return connection;
-        })
-        .catch((error) => {
-            dbConnectionPromise = null;
+      .connect(MONGO_URL, {
+        serverSelectionTimeoutMS: 15000,
+      })
+      .catch((error) => {
+        dbConnectionPromise = null;
 
-            console.error("MongoDB connection failed:", {
-                name: error.name,
-                message: error.message,
-                code: error.code,
-            });
-
-            throw error;
+        console.error("MongoDB connection failed:", {
+          name: error.name,
+          message: error.message,
+          code: error.code,
         });
-}
+
+        throw error;
+      });
+  }
+
   await dbConnectionPromise;
-  console.log("Connected to MongoDB Atlas");
 }
 
-// Ensure the database is connected before handling requests.
+// IMPORTANT: This must run BEFORE the API routers.
 app.use(async (req, res, next) => {
   try {
     await connectDB();
     next();
   } catch (error) {
-    console.error("MongoDB connection failed:", error.message);
+    console.error("Database connection failed:", error.message);
 
     res.status(500).json({
       message: "Database connection failed",
@@ -71,7 +50,12 @@ app.use(async (req, res, next) => {
   }
 });
 
-// Preserve the traditional server for AWS and local development.
+// API routes must come AFTER the database middleware.
+app.use("/api/v1/user", userRouter);
+app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/course", courseRouter);
+
+// Preserve local and AWS server startup.
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
 
@@ -87,5 +71,4 @@ if (require.main === module) {
     });
 }
 
-// Export the application for Vercel.
 module.exports = app;
