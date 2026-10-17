@@ -1,4 +1,6 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+
   "services": {
     "frontend": {
       "root": "frontend/",
@@ -13,8 +15,7 @@
 
     "backend": {
       "root": ".",
-      "framework": "express",
-      "entrypoint": "index.js"
+      "framework": "express"
     }
   },
 
