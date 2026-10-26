@@ -52,7 +52,7 @@ courseRouter.post(
     }
 
     // Create purchase
-    const purchase = await purchaseModel.create({
+     await purchaseModel.create({
       courseId,
       userId,
     });
