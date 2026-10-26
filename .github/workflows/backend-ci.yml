@@ -1,6 +1,6 @@
 name: Skillio Backend CI
 
-on:
+'on':
 push:
 workflow_dispatch:
 
