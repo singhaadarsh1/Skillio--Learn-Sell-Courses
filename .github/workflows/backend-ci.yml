@@ -8,7 +8,7 @@ jobs:
 check-backend:
 runs-on: ubuntu-latest
 
-```
+
 steps:
   - name: Checkout repository
     uses: actions/checkout@v4
@@ -20,4 +20,4 @@ steps:
 
   - name: Install backend dependencies
     run: npm ci
-```
+
