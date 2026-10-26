@@ -1,4 +1,4 @@
-name: Skillio Backend CI
+name: Skillio CI
 
 "on":
   push:
@@ -6,6 +6,7 @@ name: Skillio Backend CI
 
 jobs:
   check-backend:
+    name: Backend CI
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +20,35 @@ jobs:
 
       - name: Install backend dependencies
         run: npm ci
+
       - name: Check backend syntax
         run: node --check index.js
+
       - name: Lint backend code
         run: npm run lint
+
+  check-frontend:
+    name: Frontend CI
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Lint frontend code
+        run: npm run lint
+
+      - name: Build frontend
+        run: npm run build
