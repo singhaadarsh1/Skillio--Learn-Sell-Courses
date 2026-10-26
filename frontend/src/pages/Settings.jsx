@@ -8,7 +8,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import axios from "axios";
-import { handleAuthError } from "../utils/auth";
+
 
 function Settings() {
   const navigate = useNavigate();

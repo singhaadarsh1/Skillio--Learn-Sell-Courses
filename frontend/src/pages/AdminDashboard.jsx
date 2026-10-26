@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { handleAuthError } from "../utils/auth";
+
 
 const categories = [
   "Web Development",
@@ -74,9 +74,10 @@ function AdminDashboard() {
     }
   };
 
-  useEffect(() => {
-    fetchAdminCourses();
-  }, []);
+ useEffect(() => {
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetch courses when the dashboard mounts.
+  fetchAdminCourses();
+}, []);
 
   // --------------------------------------------------
   // Reset form
