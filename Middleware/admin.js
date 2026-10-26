@@ -10,7 +10,7 @@ function adminMiddleware(req, res, next) {
     req.adminId = verified.id;
 
     next();
-  } catch (e) {
+  } catch {
     return res.status(401).json({
       message: "Admin session expired or invalid.",
     });

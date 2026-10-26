@@ -10,7 +10,7 @@ function userMiddleware(req, res, next) {
     req.userId = verified.id;
 
     next();
-  } catch (e) {
+  } catch  {
     return res.status(401).json({
       message: "User session expired or invalid.",
     });
