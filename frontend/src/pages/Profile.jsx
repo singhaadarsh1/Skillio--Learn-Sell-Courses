@@ -9,7 +9,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import axios from "axios";
-import { handleAuthError } from "../utils/auth";
+
 
 function Profile() {
   const navigate = useNavigate();

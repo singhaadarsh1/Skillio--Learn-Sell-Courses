@@ -51,9 +51,10 @@ function CourseDetails() {
     const token = localStorage.getItem("skillio-user-token");
 
     if (!token) {
-      setIsPurchased(false);
-      return;
-    }
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Reset purchase status when the user is logged out.
+  setIsPurchased(false);
+  return;
+}
 
     const checkPurchase = async () => {
       try {

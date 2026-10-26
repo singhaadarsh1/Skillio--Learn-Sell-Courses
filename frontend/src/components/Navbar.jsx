@@ -141,12 +141,12 @@ function Navbar() {
   }, []);
 
   /*
-    Close profile menu when route changes.
-  */
-  useEffect(() => {
-    setShowProfileMenu(false);
-  }, [location.pathname]);
-
+  Close profile menu when route changes.
+*/
+useEffect(() => {
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Reset menu when the route changes.
+  setShowProfileMenu(false);
+}, [location.pathname]);
   /*
     Search suggestions.
     These are currently based on the local course data.
