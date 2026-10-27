@@ -1,0 +1,62 @@
+name: Deploy Skillio to EC2
+
+on:
+  workflow_run:
+    workflows: ["Skillio CI"]
+    types:
+      - completed
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: skillio-ec2-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to AWS EC2
+    if: >-
+     github.event.workflow_run.conclusion == 'success' &&
+     github.event.workflow_run.head_branch == 'main' &&
+     github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy application on EC2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -eu
+
+            cd /home/ubuntu/Skillio--Learn-Sell-Courses
+
+            echo "Checking for tracked local changes..."
+            if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+              echo "ERROR: Tracked local changes detected. Aborting deployment."
+              exit 1
+            fi
+
+            echo "Fetching latest code..."
+            git fetch origin main
+
+            echo "Updating repository..."
+            git merge --ff-only origin/main
+
+            echo "Installing backend production dependencies..."
+            npm ci --omit=dev
+
+            echo "Restarting backend..."
+            pm2 restart skillio-backend
+
+            echo "Checking PM2 status..."
+            pm2 status skillio-backend
+
+            echo "Checking whether the backend process is online..."
+            pm2 describe skillio-backend
