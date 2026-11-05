@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: skillio-backend:1.1
+    image: aadarsh0124/skillio-backend:${IMAGE_TAG:-latest}
     container_name: skillio-backend-compose
     restart: unless-stopped
     env_file:
@@ -28,7 +28,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    image: skillio-frontend:1.1
+    image: aadarsh0124/skillio-frontend:${IMAGE_TAG:-latest}
     container_name: skillio-frontend-compose
     restart: unless-stopped
     ports:
