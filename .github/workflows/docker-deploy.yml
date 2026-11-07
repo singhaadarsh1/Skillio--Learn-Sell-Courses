@@ -61,19 +61,24 @@ jobs:
       - name: Deploy through AWS Systems Manager
         env:
           IMAGE_TAG: ${{ steps.vars.outputs.tag }}
+          SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
         shell: bash
+
         run: |
           set -euo pipefail
 
           echo "Deploying Skillio version: $IMAGE_TAG"
 
-          COMMANDS="$(sed "s/__IMAGE_TAG__/${IMAGE_TAG}/g" <<'SCRIPT'
+          COMMANDS="$(sed \
+            -e "s|__IMAGE_TAG__|${IMAGE_TAG}|g" \
+            -e "s|__SOURCE_SHA__|${SOURCE_SHA}|g" <<'SCRIPT'
           set -eu
 
           APP_DIR="/opt/skillio-docker/app"
           BACKEND_IMAGE="aadarsh0124/skillio-backend"
           FRONTEND_IMAGE="aadarsh0124/skillio-frontend"
           IMAGE_TAG="__IMAGE_TAG__"
+          SOURCE_SHA="__SOURCE_SHA__"
 
           cd "$APP_DIR"
 
@@ -83,17 +88,38 @@ jobs:
           test -f compose.yaml
           command -v docker >/dev/null
           command -v curl >/dev/null
+          command -v sudo >/dev/null
+          command -v git >/dev/null
 
-          # Git repository belongs to ubuntu, not root.
+          # Accept main or detached HEAD from a previous deployment.
           CURRENT_BRANCH=$(sudo -u ubuntu -H git -C "$APP_DIR" branch --show-current)
-          test "$CURRENT_BRANCH" = "main"
 
-          echo "Synchronizing EC2 repository..."
+          if [ "$CURRENT_BRANCH" != "main" ] && [ -n "$CURRENT_BRANCH" ]; then
+            echo "ERROR: Unexpected Git branch: $CURRENT_BRANCH"
+            exit 1
+          fi
+
+          echo "Synchronizing EC2 repository to deployment commit..."
 
           sudo -u ubuntu -H git -C "$APP_DIR" fetch origin main
-          sudo -u ubuntu -H git -C "$APP_DIR" pull --ff-only origin main
 
-          # Preserve existing container images for rollback.
+          # Verify that the exact source commit exists.
+          sudo -u ubuntu -H git -C "$APP_DIR" cat-file -e "${SOURCE_SHA}^{commit}"
+
+          # Check out the exact commit used to build Docker images.
+          sudo -u ubuntu -H git -C "$APP_DIR" checkout --detach "$SOURCE_SHA"
+
+          # Verify the checked-out commit.
+          ACTUAL_SHA=$(sudo -u ubuntu -H git -C "$APP_DIR" rev-parse HEAD)
+
+          if [ "$ACTUAL_SHA" != "$SOURCE_SHA" ]; then
+            echo "ERROR: EC2 repository does not match image source commit."
+            exit 1
+          fi
+
+          echo "EC2 source commit verified: $ACTUAL_SHA"
+
+          # Preserve the currently running images for rollback.
           OLD_BACKEND_ID=$(docker inspect --format '{{.Image}}' skillio-backend-compose)
           OLD_FRONTEND_ID=$(docker inspect --format '{{.Image}}' skillio-frontend-compose)
 
@@ -105,25 +131,62 @@ jobs:
           export IMAGE_TAG
 
           echo "Validating Docker Compose configuration..."
+
           docker compose config --quiet
 
           echo "Pulling Docker Hub images..."
+
           docker compose pull
 
+          # Restore the previous images if deployment fails.
           rollback_on_error() {
             EXIT_CODE=$?
             trap - 0
 
             if [ "$EXIT_CODE" -ne 0 ]; then
+
               echo "Deployment failed. Rolling back to $ROLLBACK_TAG..."
 
               IMAGE_TAG="$ROLLBACK_TAG"
               export IMAGE_TAG
 
-              docker compose up -d --no-build || true
+              if docker compose up -d --no-build; then
 
-              echo "Container status after rollback:"
-              docker compose ps
+                echo "Rollback containers started. Checking health..."
+
+                ROLLBACK_HEALTHY=0
+
+                for ATTEMPT in $(seq 1 60); do
+
+                  BACKEND_STATUS=$(docker inspect --format '{{.State.Health.Status}}' skillio-backend-compose 2>/dev/null || echo unknown)
+
+                  FRONTEND_STATUS=$(docker inspect --format '{{.State.Health.Status}}' skillio-frontend-compose 2>/dev/null || echo unknown)
+
+                  if [ "$BACKEND_STATUS" = "healthy" ] &&
+                     [ "$FRONTEND_STATUS" = "healthy" ] &&
+                     curl -fsS http://127.0.0.1:8081/api/v1/course/preview >/dev/null; then
+
+                    ROLLBACK_HEALTHY=1
+                    break
+                  fi
+
+                  echo "Waiting for rollback health... $ATTEMPT/60"
+                  sleep 5
+                done
+
+                if [ "$ROLLBACK_HEALTHY" -eq 1 ]; then
+                  echo "Rollback successful. Previous containers are healthy."
+                else
+                  echo "CRITICAL: Rollback health verification failed."
+                  docker compose ps
+                fi
+
+              else
+
+                echo "CRITICAL: Could not restart previous containers."
+                docker compose ps
+
+              fi
             fi
 
             exit "$EXIT_CODE"
@@ -191,7 +254,8 @@ jobs:
 
           # Poll for up to 15 minutes.
           for ATTEMPT in $(seq 1 180); do
-          echo "Polling SSM command: attempt $ATTEMPT/180"
+
+            echo "Polling SSM command: attempt $ATTEMPT/180"
 
             INVOCATION=$(aws ssm get-command-invocation \
               --command-id "$COMMAND_ID" \
@@ -204,14 +268,18 @@ jobs:
             echo "Deployment status: $STATUS"
 
             case "$STATUS" in
+
               Success)
                 echo "EC2 deployment completed successfully."
+
                 printf '%s' "$INVOCATION" |
                   jq -r '.StandardOutputContent // ""'
+
                 exit 0
                 ;;
 
               Failed|TimedOut|Cancelled|Cancelling|DeliveryTimedOut|ExecutionTimedOut|Undeliverable|Terminated|InvalidPlatform|AccessDenied)
+
                 echo "EC2 deployment failed."
 
                 printf '%s' "$INVOCATION" |
@@ -222,10 +290,12 @@ jobs:
 
                 exit 1
                 ;;
+
             esac
 
             sleep 5
           done
 
           echo "Timed out waiting for SSM command completion."
+
           exit 1
