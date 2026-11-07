@@ -1,0 +1,231 @@
+
+name: Skillio Docker Deploy to EC2
+
+on:
+  workflow_run:
+    workflows: ["Skillio Docker Build and Publish"]
+    types:
+      - completed
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: skillio-docker-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy Docker Images to EC2
+
+    if: >-
+      (
+        github.event_name == 'workflow_dispatch' &&
+        github.ref == 'refs/heads/main'
+      ) ||
+      (
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.head_branch == 'main' &&
+        github.event.workflow_run.head_repository.full_name == github.repository
+      )
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      AWS_REGION: eu-north-1
+      EC2_INSTANCE_ID: i-025e105b40d4bd7b9
+
+    steps:
+      - name: Determine image tag
+        id: vars
+        env:
+          SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: |
+          echo "tag=${SOURCE_SHA:0:7}" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Deploy through AWS Systems Manager
+        env:
+          IMAGE_TAG: ${{ steps.vars.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Deploying Skillio version: $IMAGE_TAG"
+
+          COMMANDS="$(sed "s/__IMAGE_TAG__/${IMAGE_TAG}/g" <<'SCRIPT'
+          set -eu
+
+          APP_DIR="/opt/skillio-docker/app"
+          BACKEND_IMAGE="aadarsh0124/skillio-backend"
+          FRONTEND_IMAGE="aadarsh0124/skillio-frontend"
+          IMAGE_TAG="__IMAGE_TAG__"
+
+          cd "$APP_DIR"
+
+          echo "Checking deployment prerequisites..."
+
+          test -f .env.docker
+          test -f compose.yaml
+          command -v docker >/dev/null
+          command -v curl >/dev/null
+
+          # Git repository belongs to ubuntu, not root.
+          CURRENT_BRANCH=$(sudo -u ubuntu -H git -C "$APP_DIR" branch --show-current)
+          test "$CURRENT_BRANCH" = "main"
+
+          echo "Synchronizing EC2 repository..."
+
+          sudo -u ubuntu -H git -C "$APP_DIR" fetch origin main
+          sudo -u ubuntu -H git -C "$APP_DIR" pull --ff-only origin main
+
+          # Preserve existing container images for rollback.
+          OLD_BACKEND_ID=$(docker inspect --format '{{.Image}}' skillio-backend-compose)
+          OLD_FRONTEND_ID=$(docker inspect --format '{{.Image}}' skillio-frontend-compose)
+
+          ROLLBACK_TAG="rollback-$(date +%s)"
+
+          docker image tag "$OLD_BACKEND_ID" "$BACKEND_IMAGE:$ROLLBACK_TAG"
+          docker image tag "$OLD_FRONTEND_ID" "$FRONTEND_IMAGE:$ROLLBACK_TAG"
+
+          export IMAGE_TAG
+
+          echo "Validating Docker Compose configuration..."
+          docker compose config --quiet
+
+          echo "Pulling Docker Hub images..."
+          docker compose pull
+
+          rollback_on_error() {
+            EXIT_CODE=$?
+            trap - 0
+
+            if [ "$EXIT_CODE" -ne 0 ]; then
+              echo "Deployment failed. Rolling back to $ROLLBACK_TAG..."
+
+              IMAGE_TAG="$ROLLBACK_TAG"
+              export IMAGE_TAG
+
+              docker compose up -d --no-build || true
+
+              echo "Container status after rollback:"
+              docker compose ps
+            fi
+
+            exit "$EXIT_CODE"
+          }
+
+          trap rollback_on_error 0
+
+          echo "Starting new containers..."
+
+          IMAGE_TAG="__IMAGE_TAG__"
+          export IMAGE_TAG
+
+          docker compose up -d --no-build
+
+          echo "Verifying container health..."
+
+          HEALTHY=0
+
+          for ATTEMPT in $(seq 1 60); do
+
+            BACKEND_STATUS=$(docker inspect --format '{{.State.Health.Status}}' skillio-backend-compose 2>/dev/null || echo unknown)
+
+            FRONTEND_STATUS=$(docker inspect --format '{{.State.Health.Status}}' skillio-frontend-compose 2>/dev/null || echo unknown)
+
+            if [ "$BACKEND_STATUS" = "healthy" ] &&
+               [ "$FRONTEND_STATUS" = "healthy" ] &&
+               curl -fsS http://127.0.0.1:8081/api/v1/course/preview >/dev/null; then
+
+              HEALTHY=1
+              break
+            fi
+
+            echo "Waiting for healthy containers... $ATTEMPT/60"
+            sleep 5
+          done
+
+          if [ "$HEALTHY" -ne 1 ]; then
+            echo "Deployment health verification failed."
+            exit 1
+          fi
+
+          echo "Docker deployment successful."
+
+          docker compose ps
+
+          # Disable rollback trap after successful deployment.
+          trap - 0
+          SCRIPT
+          )"
+
+          PARAMETERS=$(jq -n --arg commands "$COMMANDS" '{commands: [$commands]}')
+
+          COMMAND_ID=$(aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --instance-ids "$EC2_INSTANCE_ID" \
+            --parameters "$PARAMETERS" \
+            --timeout-seconds 900 \
+            --comment "Skillio Docker deployment $IMAGE_TAG" \
+            --query "Command.CommandId" \
+            --output text)
+
+          echo "SSM Command ID: $COMMAND_ID"
+
+          STATUS="Pending"
+
+          # Poll for up to 15 minutes.
+          for ATTEMPT in $(seq 1 180); do
+          echo "Polling SSM command: attempt $ATTEMPT/180"
+
+            INVOCATION=$(aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$EC2_INSTANCE_ID" \
+              --output json 2>/dev/null || true)
+
+            STATUS=$(printf '%s' "$INVOCATION" |
+              jq -r '.Status // "Pending"' 2>/dev/null || echo "Pending")
+
+            echo "Deployment status: $STATUS"
+
+            case "$STATUS" in
+              Success)
+                echo "EC2 deployment completed successfully."
+                printf '%s' "$INVOCATION" |
+                  jq -r '.StandardOutputContent // ""'
+                exit 0
+                ;;
+
+              Failed|TimedOut|Cancelled|Cancelling|DeliveryTimedOut|ExecutionTimedOut|Undeliverable|Terminated|InvalidPlatform|AccessDenied)
+                echo "EC2 deployment failed."
+
+                printf '%s' "$INVOCATION" |
+                  jq -r '.StandardOutputContent // ""'
+
+                printf '%s' "$INVOCATION" |
+                  jq -r '.StandardErrorContent // ""'
+
+                exit 1
+                ;;
+            esac
+
+            sleep 5
+          done
+
+          echo "Timed out waiting for SSM command completion."
+          exit 1
